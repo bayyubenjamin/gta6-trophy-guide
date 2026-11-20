@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leonida Trophy Guide — GTA VI Platinum Tracker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>Leonida Trophy Guide</h1>
+    <p class="sub">Grand Theft Auto VI · PlayStation 5 · all 55 trophies · offline tracker</p>
+  </div>
+  <div class="platinum-block">
+    <div class="platinum-count"><strong id="earnedCount">0</strong> / 55 earned</div>
+    <div class="bar" role="progressbar" aria-label="Progress to platinum"><div id="platinumBar" class="fill"></div></div>
+    <div class="platinum-note" id="platinumNote">Platinum: Vice Got a Price! — earn the other 54</div>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Views">
+  <button type="button" data-view="checklist" class="active">Checklist</button>
+  <button type="button" data-view="roadmap">Roadmap</button>
+  <button type="button" data-view="progress">Progress</button>
+</nav>
+
+<section class="toolbar" aria-label="Filters and progress tools">
+  <label class="search">Search <input id="search" type="search" placeholder="Trophy, mission, place…" autocomplete="off"></label>
+  <div class="kinds" id="kindFilters" role="group" aria-label="Filter by kind">
+    <button type="button" data-kind="all" class="active">All</button>
+    <button type="button" data-kind="story">Story</button>
+    <button type="button" data-kind="missable">Missable</button>
+    <button type="button" data-kind="collectibles">Collectibles</button>
+    <button type="button" data-kind="activities">Activities</button>
+    <button type="button" data-kind="online">Online</button>
+  </div>
+  <label class="grade">Grade
+    <select id="grade">
+      <option value="all">All grades</option>
+      <option value="platinum">Platinum</option>
+      <option value="gold">Gold</option>
+      <option value="silver">Silver</option>
+      <option value="bronze">Bronze</option>
+    </select>
+  </label>
+  <label class="spoiler"><input id="spoiler" type="checkbox"> Hide story spoilers</label>
+  <button id="exportBtn" type="button">Export progress</button>
+  <label class="import">Import progress <input id="importFile" type="file" accept="application/json"></label>
+  <span id="importStatus" class="status" role="status"></span>
+</section>
+
+<main>
+  <section id="view-checklist" class="view">
+    <div class="list-wrap">
+      <div class="list-head"><span id="shownCount"></span></div>
+      <ul id="trophyList" class="trophy-list"></ul>
+      <p id="emptyState" class="empty" hidden>No trophies match these filters. GTA VI has no online trophies — all 55 are offline single-player.</p>
+    </div>
+    <aside id="detail" class="detail" aria-live="polite">
+      <p class="detail-empty">Select a trophy to see its guide, steps and sources.</p>
+    </aside>
+  </section>
+  <section id="view-roadmap" class="view" hidden></section>
+  <section id="view-progress" class="view" hidden></section>
+</main>
+
+<footer>
+  <p>Official names, descriptions and grades as PlayStation publishes them (via Exophase and PSNProfiles, 18 Nov 2026). Guides are written for this tracker and cite their sources beside each trophy — PowerPyx, GTABase and KeenGamer. No Rockstar artwork is used; the look is our own. Works fully offline: the app makes no network requests.</p>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
