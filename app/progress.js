@@ -1,100 +1,57 @@
-// Progress view: where the run stands, by kind and by grade,
-// plus the honest list — trophies whose unlock is still unconfirmed.
+// progress.js — renders the Progress view.
+// Shows the overall completion, the per-kind and per-grade breakdown, and the
+// full list of trophies whose unlock is still unconfirmed, in one place.
 
-const CATEGORIES = [
-  { key: 'story', label: 'Story' },
-  { key: 'missable', label: 'Missable' },
-  { key: 'collectibles', label: 'Collectibles' },
-  { key: 'activities', label: 'Activities' },
-  { key: 'online', label: 'Online' },
-];
+import { escapeHtml } from "./html.js";
+import { countByKind, countByGrade } from "./filters.js";
 
-const GRADES = ['platinum', 'gold', 'silver', 'bronze'];
-
-export function renderProgress(viewEl, trophies, earned) {
-  const el = document.createElement('div');
-
-  const byKind = document.createElement('section');
-  byKind.className = 'progress-section';
-  const byKindHeading = document.createElement('h2');
-  byKindHeading.textContent = 'Progress by category';
-  byKind.appendChild(byKindHeading);
-
-  for (const category of CATEGORIES) {
-    const inCategory = trophies.filter((t) => t.kinds.includes(category.key));
-    const done = inCategory.filter((t) => earned.has(t.id)).length;
-    const row = document.createElement('div');
-    row.className = 'cat-row';
-
-    const label = document.createElement('span');
-    label.textContent = category.label;
-    row.appendChild(label);
-
-    const bar = document.createElement('div');
-    bar.className = 'bar';
-    const fill = document.createElement('div');
-    fill.className = 'fill';
-    fill.style.width = inCategory.length ? `${Math.round((done / inCategory.length) * 100)}%` : '0%';
-    bar.appendChild(fill);
-    row.appendChild(bar);
-
-    const num = document.createElement('span');
-    num.className = 'num';
-    num.textContent = `${done} / ${inCategory.length}`;
-    row.appendChild(num);
-
-    byKind.appendChild(row);
-  }
-
-  const onlineNote = document.createElement('p');
-  onlineNote.className = 'fine';
-  onlineNote.textContent = 'There are 0 online trophies in GTA VI — every trophy is offline single-player, so the platinum is achievable without ever going online.';
-  byKind.appendChild(onlineNote);
-  el.appendChild(byKind);
-
-  const byGrade = document.createElement('section');
-  byGrade.className = 'progress-section';
-  const byGradeHeading = document.createElement('h2');
-  byGradeHeading.textContent = 'Progress by grade';
-  byGrade.appendChild(byGradeHeading);
-  const grid = document.createElement('div');
-  grid.className = 'grade-grid';
-  for (const grade of GRADES) {
-    const inGrade = trophies.filter((t) => t.grade === grade);
-    const done = inGrade.filter((t) => earned.has(t.id)).length;
-    const cell = document.createElement('div');
-    cell.className = 'grade-cell';
-    const strong = document.createElement('strong');
-    strong.textContent = `${done} / ${inGrade.length}`;
-    cell.appendChild(strong);
-    const label = document.createElement('span');
-    label.textContent = grade;
-    cell.appendChild(label);
-    grid.appendChild(cell);
-  }
-  byGrade.appendChild(grid);
-  el.appendChild(byGrade);
-
+export function renderProgress(trophies, isEarned) {
+  const total = trophies.length;
+  const earned = trophies.filter((t) => isEarned(t.id)).length;
+  const pct = total === 0 ? 0 : Math.round((earned / total) * 100);
+  const kinds = countByKind(trophies, isEarned);
+  const grades = countByGrade(trophies, isEarned);
   const unconfirmed = trophies.filter((t) => t.unconfirmed);
-  const honest = document.createElement('section');
-  honest.className = 'progress-section';
-  const honestHeading = document.createElement('h2');
-  honestHeading.textContent = 'What is still unconfirmed';
-  honest.appendChild(honestHeading);
-  const honestIntro = document.createElement('p');
-  honestIntro.textContent = 'GTA VI released on 19 November 2026. These trophies are not fully confirmed by the published guides yet — each one says so in its own guide instead of pretending otherwise:';
-  honest.appendChild(honestIntro);
-  const list = document.createElement('ul');
-  for (const trophy of unconfirmed) {
-    const li = document.createElement('li');
-    const strong = document.createElement('strong');
-    strong.textContent = trophy.name;
-    li.appendChild(strong);
-    li.appendChild(document.createTextNode(` — ${trophy.unconfirmed}`));
-    list.appendChild(li);
-  }
-  honest.appendChild(list);
-  el.appendChild(honest);
 
-  viewEl.replaceChildren(el);
+  let html = '<div class="progress-grid">';
+  html += '<div class="progress-card"><h2>Overall</h2>';
+  html += '<div class="big-number">' + earned + " / " + total + "</div>";
+  html += "<p>" + pct + "% of the way to the platinum. The platinum, Vice Got a Price!, unlocks when every other trophy is earned.</p>";
+  html += '<div class="bar"><div class="bar-fill" style="width:' + pct + '%"></div></div>';
+  const remainingHours = Math.round((1 - earned / Math.max(total, 1)) * 190);
+  html += "<p>Estimated time left at the roadmap pace (story 60–80 h, cleanup ~100 h, Strangers &amp; Freaks 10–20 h): about " + remainingHours + " hours.</p>";
+  html += "</div>";
+
+  html += '<div class="progress-card"><h2>By kind</h2><ul>';
+  const kindOrder = ["story", "missable", "collectibles", "activities", "online"];
+  for (const kind of kindOrder) {
+    const c = kinds[kind];
+    if (!c) continue;
+    html += "<li>" + escapeHtml(kind) + ": " + c.earned + " / " + c.total + "</li>";
+  }
+  html += "</ul><h2>By grade</h2><ul>";
+  const gradeOrder = ["platinum", "gold", "silver", "bronze"];
+  for (const grade of gradeOrder) {
+    const c = grades[grade];
+    if (!c) continue;
+    html += "<li>" + escapeHtml(grade) + ": " + c.earned + " / " + c.total + "</li>";
+  }
+  html += "</ul></div>";
+
+  html += '<div class="progress-card"><h2>Not yet confirmed (' + unconfirmed.length + ")</h2>";
+  html += "<p>These trophies have no verified unlock method in any published guide yet. Their guides say so honestly instead of inventing steps. Check the cited guides for updates before you attempt them.</p><ul>";
+  for (const trophy of unconfirmed) {
+    const mark = isEarned(trophy.id) ? " — earned" : "";
+    html += "<li>" + escapeHtml(trophy.name) + escapeHtml(mark) + "</li>";
+  }
+  html += "</ul></div>";
+
+  const nextUp = trophies.filter((t) => !isEarned(t.id) && !t.unconfirmed).slice(0, 8);
+  html += '<div class="progress-card"><h2>Up next</h2><ul>';
+  for (const trophy of nextUp) {
+    html += "<li>" + escapeHtml(trophy.name) + " (" + escapeHtml(trophy.grade) + ")</li>";
+  }
+  html += "</ul></div>";
+  html += "</div>";
+  return html;
 }

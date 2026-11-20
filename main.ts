@@ -1,42 +1,49 @@
-// GTA 6 trophy guide, make.fun entry gta6-trophy-guide-01 (Node 22, standard library only).
-//
-// The guide itself is plain static files under app/: index.html opens in a desktop
-// browser and works with the network off, and app/data/trophies.json holds the 55
-// official trophies with a guide for each. screenshots/ holds four real renders of
-// the app in a browser. This program hands the entry in: it copies app/ and
-// screenshots/ into the output directory and writes dossier.json there, the summary
-// the judge reads (the screenshots, the first load's files and bytes, and the
-// source), built with the vendored make.fun library. The library must stay exactly
-// as the kit ships it: the scorer rebuilds the dossier with its own copy and
-// compares the two byte for byte.
-//
-// Run it outside the grader with MAKEFUN_OUTPUT_DIR in place of /output:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-// It is deterministic: two runs write the same bytes.
+// main.ts — entrypoint for the Leonida Trophy Guide.
+// Copies app/ and screenshots/ from this repository into the output
+// directory and writes dossier.json there, using the kit's buildDossier
+// library. Run it as `node main.ts` from the repository root.
+// MAKEFUN_OUTPUT_DIR stands in for /output outside the grader.
 
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { buildDossier } from './vendor/makefun-frontend.ts';
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { buildDossier } from "./vendor/makefun-frontend.ts";
 
-const repoRoot = fileURLToPath(new URL('.', import.meta.url));
-const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const repoRoot = import.meta.dirname;
+const outDir = process.env.MAKEFUN_OUTPUT_DIR || "/output";
 
-mkdirSync(outputDir, { recursive: true });
-cpSync(join(repoRoot, 'app'), join(outputDir, 'app'), { recursive: true });
-mkdirSync(join(outputDir, 'screenshots'), { recursive: true });
-if (existsSync(join(repoRoot, 'screenshots'))) {
-  cpSync(join(repoRoot, 'screenshots'), join(outputDir, 'screenshots'), { recursive: true });
+function copyTree(source: string, target: string): void {
+  mkdirSync(target, { recursive: true });
+  cpSync(source, target, { recursive: true, dereference: false });
 }
 
-// The caps match the scorer's gate: at most 4 screenshots of 256 KiB each, app/ at
-// most 993 files and directories and 48 MiB, and the dossier text at most 160 KiB.
-writeFileSync(
-  join(outputDir, 'dossier.json'),
-  buildDossier(outputDir, {
+function build(): void {
+  const appDir = join(repoRoot, "app");
+  const shotsDir = join(repoRoot, "screenshots");
+  if (!existsSync(appDir)) {
+    throw new Error("app/ is missing from the repository");
+  }
+  if (!existsSync(shotsDir)) {
+    throw new Error("screenshots/ is missing from the repository");
+  }
+  const shotFiles = readdirSync(shotsDir).filter((name) => !name.startsWith("."));
+  if (shotFiles.length < 3 || shotFiles.length > 4) {
+    throw new Error("screenshots/ must hold 3 or 4 images, found " + shotFiles.length);
+  }
+  mkdirSync(outDir, { recursive: true });
+  const outApp = join(outDir, "app");
+  const outShots = join(outDir, "screenshots");
+  rmSync(outApp, { recursive: true, force: true });
+  rmSync(outShots, { recursive: true, force: true });
+  copyTree(appDir, outApp);
+  copyTree(shotsDir, outShots);
+  const dossier = buildDossier(outDir, {
     text_max_bytes: 163840,
     screenshots: { max: 4, max_bytes: 262144 },
     app_max_files: 993,
     app_max_bytes: 50331648,
-  }),
-);
+    app_path_max_bytes: 1000
+  });
+  writeFileSync(join(outDir, "dossier.json"), dossier);
+}
+
+build();

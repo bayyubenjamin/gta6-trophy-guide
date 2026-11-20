@@ -1,29 +1,53 @@
-// Filtering and spoiler masking for the checklist.
-// Spoiler mode hides the name and description of story trophies the player
-// has not earned yet; the guide for a hidden trophy stays hidden too,
-// because a guide that says where a story trophy pops is itself a spoiler.
-// Missable and activity trophies are never hidden: their whole point is
-// that the player needs to know about them in advance.
+// filters.js — filtering and spoiler masking for the trophy list.
+// Pure functions: they take the trophy array and a filter object and return
+// a new array. No DOM, no storage, so they are easy to test in isolation.
 
-export function trophyIsHiddenBySpoiler(trophy, earned, spoilerOn) {
-  if (!spoilerOn) return false;
-  if (earned.has(trophy.id)) return false;
-  return trophy.kinds.includes('story');
-}
-
-export function filterTrophies(trophies, earned, state) {
-  const query = state.query.trim().toLowerCase();
-  return trophies.filter((trophy) => {
-    if (state.kind !== 'all' && !trophy.kinds.includes(state.kind)) return false;
-    if (state.grade !== 'all' && trophy.grade !== state.grade) return false;
+export function filterTrophies(trophies, options) {
+  const kind = options.kind || "all";
+  const grade = options.grade || "all";
+  const query = (options.query || "").trim().toLowerCase();
+  const out = [];
+  for (const trophy of trophies) {
+    if (kind !== "all" && trophy.kind !== kind) continue;
+    if (grade !== "all" && trophy.grade !== grade) continue;
     if (query) {
-      const haystack = `${trophy.name} ${trophy.description} ${trophy.guide}`.toLowerCase();
-      if (!haystack.includes(query)) return false;
+      const haystack = (trophy.name + " " + trophy.description + " " + trophy.kind + " " + trophy.grade).toLowerCase();
+      if (!haystack.includes(query)) continue;
     }
-    return true;
-  });
+    out.push(trophy);
+  }
+  return out;
 }
 
-export function displayName(trophy, earned, spoilerOn) {
-  return trophyIsHiddenBySpoiler(trophy, earned, spoilerOn) ? 'Hidden story trophy' : trophy.name;
+// Spoiler mode hides the name, description and guide of story trophies the
+// user has not earned yet. Missable, collectible and activity trophies are
+// never hidden, because their names are not story spoilers.
+export function isSpoilerHidden(trophy, spoilerOn, isEarned) {
+  if (!spoilerOn) return false;
+  if (isEarned) return false;
+  return trophy.kind === "story";
+}
+
+export function spoilerLabel() {
+  return "Hidden story trophy — earn it to reveal its name and guide.";
+}
+
+export function countByKind(trophies, isEarned) {
+  const counts = {};
+  for (const trophy of trophies) {
+    if (!counts[trophy.kind]) counts[trophy.kind] = { total: 0, earned: 0 };
+    counts[trophy.kind].total += 1;
+    if (isEarned(trophy.id)) counts[trophy.kind].earned += 1;
+  }
+  return counts;
+}
+
+export function countByGrade(trophies, isEarned) {
+  const counts = {};
+  for (const trophy of trophies) {
+    if (!counts[trophy.grade]) counts[trophy.grade] = { total: 0, earned: 0 };
+    counts[trophy.grade].total += 1;
+    if (isEarned(trophy.id)) counts[trophy.grade].earned += 1;
+  }
+  return counts;
 }

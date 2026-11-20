@@ -1,0 +1,6 @@
+# Build and runtime artefacts only; the entry itself is plain static files.
+node_modules/
+.DS_Store
+*.log
+/tmp/
+out/

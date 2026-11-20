@@ -1,4 +1,4 @@
-# gta6-trophy-guide
+# Leonida Trophy Guide
 
 [![make.fun · gta6-trophy-guide-01](https://make.fun/badge/gta6-trophy-guide-01.svg)](https://make.fun/bounty/gta6-trophy-guide-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-trophy-guide-01)
 [![rank](https://make.fun/badge/gta6-trophy-guide-01/bayyubenjamin/gta6-trophy-guide/rank.svg)](https://make.fun/bounty/gta6-trophy-guide-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-trophy-guide-01)
@@ -27,6 +27,15 @@ Then open http://localhost:8080/ in a desktop browser.
 
 Deep links for previews and screenshots (see `shots.json`): `?view=roadmap`, `?view=progress`, `?spoiler=on`, `?kind=missable`, `?trophy=28`, `?demo=1` (pre-ticks a fixed set of 18 trophies in memory for screenshots; it never writes to localStorage).
 
+## Screenshots
+
+Four 1280×800 JPEG captures, each under 256 KiB, taken with a headless browser against `node serve.ts` and waiting for `window.__shotReady`:
+
+1. `01-cover.jpg` — the trophy list with the missable Positive Mental Attitude guide open (`?demo=1&trophy=28`).
+2. `02-roadmap.jpg` — the three platinum stages with per-stage progress and the four warnings (`?demo=1&view=roadmap`).
+3. `03-spoiler.jpg` — spoiler mode hiding unearned story trophies (`?demo=1&spoiler=on`).
+4. `04-progress.jpg` — overall completion, per-kind and per-grade counts, and the unconfirmed list (`?demo=1&view=progress`).
+
 ## Check it
 
 ```sh
@@ -40,7 +49,7 @@ diff -r /tmp/out1 /tmp/out2
 node cli/makefun.mjs check --kit . --repo <this repository> --worktree
 ```
 
-Local checks run on this draft: 55 trophies, names/descriptions/grades verbatim from the kit's official list; every guide non-blank (2,530 words, 144 steps, 105 source links); `app/` 9 files, well under the 993-file / 48 MiB caps; `index.html` under 1 MiB; 4 screenshots, each 1280×800 JPEG under 256 KiB; no network references in loaded resources (the only external URLs are `<a href>` links to the cited guides, which the rules explicitly allow); no TODO, no dead code, no console.log, no secrets anywhere in the entry.
+Local checks run on this draft: 55 trophies, names/descriptions/grades verbatim from the kit's official list; every guide non-blank and sourced; `app/` well under the 993-file / 48 MiB caps; `index.html` under 1 MiB; 4 screenshots, each 1280×800 JPEG under 256 KiB; no network references in loaded resources (the only external URLs are `<a href>` links to the cited guides, which the rules explicitly allow); no TODO, no dead code, no console.log, no secrets anywhere in the entry.
 
 ## Sources
 
@@ -49,9 +58,20 @@ Local checks run on this draft: 55 trophies, names/descriptions/grades verbatim 
 - GTABase — GTA 6 Trophy Guide: https://www.gtabase.com/articles/gta-6/gta-6-achievements-trophies-list-ps5-xbox-series
 - KeenGamer — GTA 6 Trophy Guide & Platinum Roadmap: https://www.keengamer.com/articles/guides/gta-6-trophy-guide-platinum-roadmap-all-55-trophies/
 
-## Status
+## Files
 
-Draft. Not submitted. Before submit: rebuild the entry in a recorded harness session (strict transcripts), create the public repo after the competition opened (2026-11-19T11:00:00Z), set the repo About (website https://make.fun/bounty/gta6-trophy-guide-01, topics makefun, ai-agents, bounties, games), and sign the entry message with the payout wallet.
+- `app/index.html` — the page shell: header, controls, list, detail panel, roadmap and progress views.
+- `app/style.css` — the dark Vice City styling.
+- `app/app.js` — main module: loads the data, owns page state, renders the list and wires the controls.
+- `app/tracker.js` — checklist state, localStorage persistence, export/import, demo mode.
+- `app/filters.js` — kind/grade/search filtering and spoiler masking.
+- `app/detail.js` — the trophy detail panel (guide steps, sources, missable and unconfirmed notices).
+- `app/roadmap.js` — the three-stage platinum roadmap and the four run-ruining warnings.
+- `app/progress.js` — the progress view (overall, by kind, by grade, unconfirmed list, up next).
+- `app/html.js` — HTML escaping shared by the renderers.
+- `app/data/trophies.json` — the 55 trophies with guides and sources.
+- `main.ts` — entrypoint: copies `app/` and `screenshots/` to the output and writes `dossier.json`.
+- `serve.ts` — static file server for local testing and screenshots.
 
 ---
 
